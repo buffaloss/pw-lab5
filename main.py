@@ -9,9 +9,9 @@ def search(search_term):
 def show_help():
     print("\nUsage: go2web [options]")
     print("Options:")
-    print("  -u <URL>            Make an HTTP request to the specified URL and print the response")
-    print("  -s <search-term>    Make an HTTP request to search the term using your favorite search engine and print top 10 results")
-    print("  -h                  Show this help")
+    print("  -u <URL>            Make an HTTP request to a specified URL and print the response")
+    print("  -s <search-term>    Make an HTTP request to search a term using a search engine and print the top 10 results")
+    print("  -h                  Show help")
     print()
 
 def process_input(user_input):
