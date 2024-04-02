@@ -2,21 +2,11 @@ import sys
 from urllib.parse import urlparse
 import socket, ssl
 from bs4 import BeautifulSoup
+import json
 
-def google_search(search_terms):
-    query = "+".join(search_terms)
-    url = f"https://www.google.com/search?q={query}"
-    res = send_request(url)
-    soup = BeautifulSoup(res, 'html.parser')
-    for h3_tag in soup.find_all('h3'):
-        title = h3_tag.getText()
-        print(title, end=' - ')
-        parent_anchor = h3_tag.find_parent('a')
-        if parent_anchor:
-            addr = parent_anchor.get('href')
-            if addr:
-                addr = addr.split("?q=")[-1].split('&')[0]
-                print(addr)
+with open('cache.json', 'r') as f:
+    cache = json.load(f)
+
 
 def send_request(url):
     parsed_url = urlparse(url)
@@ -29,6 +19,10 @@ def send_request(url):
         ...
     else:
         path = "/"
+
+    if host + path in cache:
+        print('Found in cache')
+        return cache[host + path]
 
     port = 80
     ssl_port = 443
@@ -61,14 +55,41 @@ def send_request(url):
     except UnicodeDecodeError:
         decoded_response = response.decode('ISO-8859-1')
 
+    cache[host + path] = decoded_response
+    with open('cache.json', 'w') as f:
+        json.dump(cache, f)
+
     return decoded_response
+
 
 def get_page(url):
     res = send_request(url)
     soup = BeautifulSoup(res, 'html.parser')
-    contents = soup.body.get_text(separator='\n\n', strip=True).strip()
+    if 'application/json' in res:
+        json_str = res.split('\r\n\r\n', 1)[1]
+        json_str = json_str[json_str.find('{'):].rstrip('0\r\n')
+        json_data = json.loads(json_str)
+        contents = json.dumps(json_data, indent=4, ensure_ascii=False)
+    else:
+        contents = soup.body.get_text(separator='\n\n', strip=True).strip()
     print(contents)
-    
+
+
+def google_search(search_terms):
+    query = ""
+    for term in search_terms:
+        query += term + '+'
+    url = f"https://www.google.com/search?q={query[:-1]}"
+    res = send_request(url)
+    soup = BeautifulSoup(res, 'html.parser')
+    for h3_tag in soup.find_all('h3'):
+        parent_anchor = h3_tag.find_parent('a')
+        if parent_anchor:
+            addr = parent_anchor.get('href')
+            if addr:
+                addr = addr.split("?q=")[-1].split('&')[0]
+                print(addr)
+
 
 def main():
     if len(sys.argv) == 1 or sys.argv[1] == "-h":
@@ -84,6 +105,7 @@ go2web -h                  Show help
     if sys.argv[1] == "-u":
         url = sys.argv[2]
         get_page(url)
+
     elif sys.argv[1] == "-s":
         search_term = tuple(sys.argv[2:])
         google_search(search_term)
