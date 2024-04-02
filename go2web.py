@@ -1,6 +1,7 @@
 import sys
 from urllib.parse import urlparse
-import socket, ssl
+import socket
+import ssl
 from bs4 import BeautifulSoup
 import json
 
@@ -34,7 +35,8 @@ def send_request(url):
     else:
         sock.connect((host, port))
 
-    sock.send(f'GET {path} HTTP/1.1\r\nHost:{host}\r\nConnection: close\r\n\r\n'.encode())
+    sock.send(
+        f'GET {path} HTTP/1.1\r\nHost:{host}\r\nConnection: close\r\n\r\n'.encode())
     response = b''
     data = 1
     while data:
@@ -61,18 +63,6 @@ def send_request(url):
 
     return decoded_response
 
-
-# def get_page(url):
-#     res = send_request(url)
-#     soup = BeautifulSoup(res, 'html.parser')
-#     if 'application/json' in res:
-#         json_str = res.split('\r\n\r\n', 1)[1]
-#         json_str = json_str[json_str.find('{'):].rstrip('0\r\n')
-#         json_data = json.loads(json_str)
-#         contents = json.dumps(json_data, indent=4, ensure_ascii=False)
-#     else:
-#         contents = soup.body.get_text(separator='\n\n', strip=True).strip()
-#     print(contents)
 
 def get_page(url):
     res = send_request(url)
