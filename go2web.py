@@ -3,6 +3,21 @@ from urllib.parse import urlparse
 import socket, ssl
 from bs4 import BeautifulSoup
 
+def google_search(search_terms):
+    query = "+".join(search_terms)
+    url = f"https://www.google.com/search?q={query}"
+    res = send_request(url)
+    soup = BeautifulSoup(res, 'html.parser')
+    for h3_tag in soup.find_all('h3'):
+        title = h3_tag.getText()
+        print(title, end=' - ')
+        parent_anchor = h3_tag.find_parent('a')
+        if parent_anchor:
+            addr = parent_anchor.get('href')
+            if addr:
+                addr = addr.split("?q=")[-1].split('&')[0]
+                print(addr)
+
 def send_request(url):
     parsed_url = urlparse(url)
     host = parsed_url.netloc
@@ -69,6 +84,9 @@ go2web -h                  Show help
     if sys.argv[1] == "-u":
         url = sys.argv[2]
         get_page(url)
+    elif sys.argv[1] == "-s":
+        search_term = tuple(sys.argv[2:])
+        google_search(search_term)
 
     else:
         print("Invalid usage.  Please use 'go2web -h' for help.")
