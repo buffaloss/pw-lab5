@@ -1,6 +1,7 @@
 import sys
 from urllib.parse import urlparse
 import socket, ssl
+from bs4 import BeautifulSoup
 
 def send_request(url):
     parsed_url = urlparse(url)
@@ -49,6 +50,9 @@ def send_request(url):
 
 def get_page(url):
     res = send_request(url)
+    soup = BeautifulSoup(res, 'html.parser')
+    contents = soup.body.get_text(separator='\n\n', strip=True).strip()
+    print(contents)
     
 
 def main():
